@@ -18,8 +18,6 @@ All hazard assessments are stored in PostgreSQL and support human **Accept/Rejec
 - **Human-in-the-Loop Review:** Allows reviewers to accept or reject generated results.
 - **Containerized Deployment:** Supports Docker Compose for simplified setup.
 
-> **Safety notice:** Generated assessments and requirements are drafts for human review. They must not be treated as certified automotive safety decisions.
-
 ---
 
 ## Technology Stack
@@ -308,23 +306,5 @@ HARA-ASIL-Assistant/
 ├── requirements.txt
 ├── docker-compose.yml
 └── README.md
-```
 
----
-
-## Safety and Validation
-
-- ASIL calculation follows the application's configured deterministic rules.
-- Machine-learning outputs should be validated against suitable labelled data.
-- Retrieved hazards provide supporting context; similarity does not establish correctness.
-- LLM-generated safety goals and requirements require qualified human review.
-- Accept/Reject decisions should be recorded for traceability.
-
-This project is an AI-assisted engineering tool and does not replace a formal hazard analysis process, applicable automotive safety standards, or expert approval.
-
----
-
-## License
-
-Add your chosen open-source license here if you intend to distribute the project publicly.
 ```
