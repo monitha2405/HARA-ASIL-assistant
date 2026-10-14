@@ -1,0 +1,27 @@
+# Runs everything: PostgreSQL + Ollama (local LLM) + the web app.
+#   docker compose up --build        then open http://localhost:8000
+services:
+  db:
+    image: postgres:16-alpine
+    environment: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: hara }
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U postgres"], interval: 3s, retries: 20 }
+  ollama:
+    image: ollama/ollama
+    volumes: [ollama:/root/.ollama]
+    healthcheck: { test: ["CMD", "ollama", "list"], interval: 5s, retries: 20 }
+  model-pull:                      # downloads the small model once, then exits
+    image: ollama/ollama
+    depends_on: { ollama: { condition: service_healthy } }
+    environment: { OLLAMA_HOST: "ollama:11434" }
+    entrypoint: ["ollama", "pull", "qwen2.5:0.5b"]
+    restart: "no"
+  app:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/hara
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: qwen2.5:0.5b
+    depends_on: { db: { condition: service_healthy }, ollama: { condition: service_healthy } }
+volumes: { pgdata: {}, ollama: {} }

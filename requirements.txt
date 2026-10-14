@@ -1,0 +1,9 @@
+numpy
+pandas
+scikit-learn
+matplotlib
+seaborn
+flask
+pytest
+chromadb
+psycopg2-binary

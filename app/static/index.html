@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HARA Assistant</title>
+<style>
+  body { margin:0; font-family: "Segoe UI", Arial, sans-serif; font-size:14px; background:#f3f4f6; color:#222; }
+  .navbar { background:#1f3a5f; color:#fff; padding:0 24px; display:flex; align-items:center; height:52px; }
+  .navbar h1 { font-size:17px; font-weight:600; margin:0 32px 0 0; }
+  .navbar a { color:#c9d6e8; text-decoration:none; padding:16px 14px; cursor:pointer; }
+  .navbar a.active { color:#fff; border-bottom:3px solid #6fa8ff; }
+  .container { max-width:1100px; margin:20px auto; padding:0 16px; }
+  .card { background:#fff; border:1px solid #d9dce1; border-radius:4px; padding:18px; margin-bottom:16px; }
+  .card h2 { font-size:16px; margin:0 0 14px; padding-bottom:8px; border-bottom:1px solid #e5e7eb; }
+  .cols { display:flex; gap:16px; flex-wrap:wrap; } .cols > div { flex:1; min-width:300px; }
+  label { display:block; margin:10px 0 3px; font-weight:600; font-size:13px; }
+  select, input { width:100%; padding:6px 8px; border:1px solid #b8bec7; border-radius:3px; font-size:14px; box-sizing:border-box; }
+  .hint { color:#6b7280; font-size:12px; }
+  button { background:#1f3a5f; color:#fff; border:0; padding:8px 18px; border-radius:3px; font-size:14px; cursor:pointer; margin-top:14px; }
+  button:hover { background:#2c5086; } button.red { background:#a33; } button.grey { background:#6b7280; }
+  table { width:100%; border-collapse:collapse; margin-top:6px; }
+  th, td { text-align:left; padding:7px 8px; border-bottom:1px solid #e5e7eb; font-size:13px; }
+  th { background:#f3f4f6; }
+  .bar { background:#e5e7eb; height:8px; width:120px; display:inline-block; border-radius:4px; vertical-align:middle; }
+  .bar span { display:block; height:100%; background:#3b82f6; border-radius:4px; }
+  .badge { display:inline-block; padding:4px 14px; border-radius:3px; font-weight:700; font-size:18px; color:#fff; }
+  .QM{background:#2e8b57}.A{background:#7a9a1e}.B{background:#d9a300}.C{background:#e07b1a}.D{background:#c0392b}
+  .notice { padding:9px 12px; border-radius:3px; margin-top:12px; }
+  .notice.warn { background:#fdecea; border:1px solid #e6b0aa; } .notice.info { background:#eaf2fb; border:1px solid #b6d0ee; }
+  .error { color:#b00020; margin-top:8px; } .hidden { display:none; }
+  img { max-width:100%; border:1px solid #e5e7eb; } .imgs { display:flex; gap:12px; flex-wrap:wrap; } .imgs img { width:48%; min-width:280px; }
+</style>
+</head>
+<body>
+<div class="navbar">
+  <h1>HARA Assistant</h1>
+  <a id="t-assess" class="active" onclick="show('assess')">New assessment</a>
+  <a id="t-perf" onclick="show('perf')">Model performance</a>
+  <a id="t-audit" onclick="show('audit')">Audit log</a>
+</div>
+
+<div class="container">
+<!-- ===== Assessment page ===== -->
+<div id="p-assess"><div class="cols">
+  <div class="card"><h2>Hazard details</h2>
+    <label>Vehicle function</label><select id="f"></select>
+    <label>Malfunction type</label><select id="m"></select>
+    <label>Operating scenario</label><select id="s"></select>
+    <label>Vehicle speed (km/h)</label><input type="number" id="sp" value="60" min="0" max="250">
+    <label>Exposure (% of operating time)</label><input type="number" id="ex" value="5" min="0.001" max="100" step="any">
+    <label>Driver reaction time (s)</label><input type="number" id="rt" value="1.5" min="0" max="10" step="0.1">
+    <label>Pedestrian present?</label><select id="pd"><option value="0">No</option><option value="1">Yes</option></select>
+    <button onclick="assess()">Run assessment</button>
+    <div class="error" id="err"></div>
+  </div>
+  <div class="card"><h2>Result</h2>
+    <div id="empty" class="hint">Fill in the hazard details and click "Run assessment".</div>
+    <div id="result" class="hidden">
+      <p id="desc" style="margin-top:0"></p>
+      <table><tr><th>Factor</th><th>Predicted class</th><th>Confidence</th></tr><tbody id="rows"></tbody></table>
+      <p>Suggested ASIL: <span class="badge" id="asil"></span></p>
+      <div id="notice"></div>
+      <p class="hint" id="why"></p>
+      <h2 style="margin-top:18px">Draft safety goal / requirement</h2>
+      <div class="notice info" id="draft"></div>
+      <p class="hint" id="dsrc"></p>
+      <h2 style="margin-top:18px">Similar approved hazards (retrieved from ChromaDB)</h2>
+      <table><tr><th>ID</th><th>Hazard</th><th>S/E/C</th><th>ASIL</th></tr><tbody id="sim"></tbody></table>
+      <h2 style="margin-top:18px">Engineer decision</h2>
+      <label>Engineer name</label><input type="text" id="eng">
+      <label>Comment</label><input type="text" id="note">
+      <button onclick="decide('ACCEPT')">Accept</button> <button class="red" onclick="decide('REJECT')">Reject</button>
+      <div class="hint" id="saved"></div>
+    </div>
+  </div>
+</div></div>
+
+<!-- ===== Performance page ===== -->
+<div id="p-perf" class="hidden">
+  <div class="card"><h2>Final test-set results</h2><table id="best"></table>
+    <p class="hint" id="asilm"></p></div>
+  <div class="card"><h2>Cross-validation comparison (macro F1)</h2><table id="cmp"></table></div>
+  <div class="card"><h2>Data exploration and evaluation plots</h2><div class="imgs">
+    <img src="/reports/eda_class_distribution.png"><img src="/reports/eda_correlation.png">
+    <img src="/reports/eda_pca.png"><img src="/reports/confusion_asil.png"></div></div>
+</div>
+
+<!-- ===== Audit page ===== -->
+<div id="p-audit" class="hidden"><div class="card"><h2>Audit log (latest 50)</h2>
+  <table><thead><tr><th>Time</th><th>Event</th><th>Details</th></tr></thead><tbody id="arows"></tbody></table></div></div>
+</div>
+
+<script>
+var cur = null;
+function $(id) { return document.getElementById(id); }
+
+function show(name) {
+  ["assess","perf","audit"].forEach(function(n) {
+    $("p-"+n).classList.toggle("hidden", n != name);
+    $("t-"+n).classList.toggle("active", n == name);
+  });
+  if (name == "audit") loadAudit();
+}
+
+function fillSelect(id, items) {
+  $(id).innerHTML = items.map(function(x){ return "<option>"+x+"</option>"; }).join("");
+}
+
+function assess() {
+  $("err").textContent = "";
+  var body = { function:$("f").value, malfunction:$("m").value, scenario:$("s").value,
+    speed_kmh:$("sp").value, exposure_pct:$("ex").value, reaction_s:$("rt").value, pedestrians:$("pd").value };
+  fetch("/api/assess", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) })
+    .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+    .then(function(x){
+      if (!x.ok) { $("err").textContent = "Error: " + x.j.error; return; }
+      var r = x.j; cur = r;
+      var names = { S:"Severity", E:"Exposure", C:"Controllability" };
+      $("rows").innerHTML = ["S","E","C"].map(function(k){
+        var pct = Math.round(r[k].confidence*100);
+        return "<tr><td>"+names[k]+"</td><td>"+k+r[k].value+"</td><td><div class='bar'><span style='width:"+pct+"%'></span></div> "+pct+"%</td></tr>";
+      }).join("");
+      $("desc").textContent = r.description;
+      $("asil").textContent = r.asil; $("asil").className = "badge " + r.asil;
+      $("notice").innerHTML = r.needs_expert_review
+        ? "<div class='notice warn'>Expert review required (high ASIL or low model confidence).</div>"
+        : "<div class='notice info'>Routine review. Human approval is still needed.</div>";
+      $("draft").textContent = r.draft.text; $("dsrc").textContent = "Source: " + r.draft.source + ". Draft only, needs engineer review.";
+      $("sim").innerHTML = r.similar.map(function(x){
+        return "<tr><td>"+x.id+"</td><td>"+x.text+"</td><td>S"+x.S+" E"+x.E+" C"+x.C+"</td><td>"+x.ASIL+"</td></tr>"; }).join("");
+      $("why").textContent = r.rationale; $("saved").textContent = "";
+      $("empty").classList.add("hidden"); $("result").classList.remove("hidden");
+    });
+}
+
+function decide(action) {
+  fetch("/api/decision", { method:"POST", headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({ hazard_id:cur.hazard_id, action:action, engineer:$("eng").value, note:$("note").value, asil_final:cur.asil }) })
+    .then(function(r){ return r.json(); })
+    .then(function(){ $("saved").textContent = "Decision saved (" + action + ")."; });
+}
+
+function loadAudit() {
+  fetch("/api/audit").then(function(r){ return r.json(); }).then(function(rows){
+    $("arows").innerHTML = rows.length ? rows.map(function(r){
+      return "<tr><td>"+r.ts+"</td><td>"+r.event+"</td><td>"+r.hazard_id+": "+r.details+"</td></tr>";
+    }).join("") : "<tr><td colspan=3 class='hint'>No entries yet.</td></tr>";
+  });
+}
+
+function loadMetrics() {
+  fetch("/api/metrics").then(function(r){ return r.json(); }).then(function(m){
+    var h = "<tr><th>Target</th><th>Model</th><th>CV F1</th><th>Test accuracy</th><th>Test F1</th></tr>";
+    ["S","E","C"].forEach(function(k){ var b = m.best[k];
+      h += "<tr><td>"+k+"</td><td>"+b.model+"</td><td>"+b.cv_f1.toFixed(3)+"</td><td>"+b.test_acc.toFixed(3)+"</td><td>"+b.test_f1.toFixed(3)+"</td></tr>"; });
+    $("best").innerHTML = h;
+    var names = Object.keys(m.models.S), c = "<tr><th>Model</th><th>S</th><th>E</th><th>C</th></tr>";
+    names.forEach(function(n){ c += "<tr><td>"+n+"</td>"+["S","E","C"].map(function(k){ return "<td>"+m.models[k][n].toFixed(3)+"</td>"; }).join("")+"</tr>"; });
+    $("cmp").innerHTML = c;
+    var a = m.asil;
+    $("asilm").textContent = "ASIL (rule applied to predicted S/E/C): accuracy " + a.accuracy.toFixed(3) + ", macro F1 " + a.macro_f1.toFixed(3) +
+      ", under-classification " + (a.under_classification_rate*100).toFixed(1) + "%, within one level " + (a.within_one_level*100).toFixed(1) +
+      "%. Trained on synthetic data, version " + m.meta.version + ".";
+  });
+}
+
+fetch("/api/options").then(function(r){ return r.json(); }).then(function(o){
+  fillSelect("f", o.functions); fillSelect("m", o.malfunctions); fillSelect("s", o.scenarios);
+});
+loadMetrics();
+</script>
+</body>
+</html>
