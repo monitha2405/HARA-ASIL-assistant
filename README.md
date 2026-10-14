@@ -4,11 +4,11 @@ deterministic rule, a **RAG** layer retrieves similar approved hazards, a **loca
 and everything is stored in **PostgreSQL** with human Accept/Reject.
 
 ## Tech stack 
-| Layer | Case study options |
+| Layer | Tech Stack used |
 |---|---|---|
 | UI | Flask-served web UI |
 | API | Flask | 
-| LLM |  **Qwen2.5-0.5B via Ollama** |
+| LLM |  Qwen2.5-0.5B via Ollama |
 | Embeddings | MiniLM-L6 |
 | Vector DB | ChromaDB |
 | RAG | custom Python | 
