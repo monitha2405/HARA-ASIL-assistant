@@ -285,26 +285,43 @@ pytest -q
 The following is a logical overview of the main components. Actual paths should match the repository.
 
 ```text
-HARA-ASIL-Assistant/
-│
+
+HARA-ASIL-assistant/
 ├── app/
-│   └── main.py                 # Flask application entry point
+│   ├── static/
+│   │   └── index.html
+│   ├── __init__.py
+│   └── main.py
 │
-├── src/
-│   ├── train.py                # Model training and evaluation
-│   ├── data_gen.py             # Synthetic data generation
-│   ├── asil.py                 # Deterministic ASIL rules
-│   ├── rag.py                  # Hazard retrieval pipeline
-│   ├── llm.py                  # Local LLM integration
-│   └── db.py                   # PostgreSQL persistence
+├── data/
+│   └── hara_synthetic.csv
 │
 ├── models/
-│   └── hara_model.skops        # Saved trained model
+│   ├── hara_model.pkl
+│   └── metrics.json
 │
-├── data/                       # Dataset and knowledge-base inputs
-├── tests/                      # Automated tests
-├── requirements.txt
+├── reports/
+│   ├── confusion_asil.png
+│   ├── eda_class_distribution.png
+│   ├── eda_correlation.png
+│   └── eda_pca.png
+│
+├── src/
+│   ├── __init__.py
+│   ├── asil.py
+│   ├── data_gen.py
+│   ├── db.py
+│   ├── llm.py
+│   ├── rag.py
+│   └── train.py
+│
+├── tests/
+│   └── test_core.py
+│
+├── .dockerignore
 ├── docker-compose.yml
-└── README.md
+├── Dockerfile
+├── README.md
+└── requirements.txt
 
 ```
