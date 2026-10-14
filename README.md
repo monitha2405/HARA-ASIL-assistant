@@ -14,7 +14,6 @@ and everything is stored in **PostgreSQL** with human Accept/Reject.
 | RAG | LangChain / custom Python | custom Python (`src/rag.py`, `src/llm.py`) |
 | Structured storage | SQLite / PostgreSQL | **PostgreSQL** (`src/db.py`) |
 | Deployment | Docker | Dockerfile + docker-compose |
-| ML (course syllabus) | – | scikit-learn: LogReg, SVM, RandomForest, kNN |
 
 ## Run with Docker (easiest, everything included)
 Install Docker Desktop and make sure it is running. Then, in the project folder (where `docker-compose.yml` is):
