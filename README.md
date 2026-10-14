@@ -6,14 +6,14 @@ and everything is stored in **PostgreSQL** with human Accept/Reject.
 ## Tech stack (from the case-study document; "or" choices -> the easiest one)
 | Layer | Case study options | Used here |
 |---|---|---|
-| UI | Streamlit / Flask web UI | Flask-served web UI |
-| API | FastAPI / Flask | Flask |
-| LLM | Llama, Mistral, Qwen... (local) | **Qwen2.5-0.5B via Ollama** (free, ~400 MB) |
-| Embeddings | BGE / E5 / Sentence Transformers | MiniLM-L6 (Chroma default, ~80 MB) |
-| Vector DB | FAISS / ChromaDB | **ChromaDB** |
-| RAG | LangChain / custom Python | custom Python (`src/rag.py`, `src/llm.py`) |
-| Structured storage | SQLite / PostgreSQL | **PostgreSQL** (`src/db.py`) |
-| Deployment | Docker | Dockerfile + docker-compose |
+| UI | Flask-served web UI |
+| API | Flask | 
+| LLM |  **Qwen2.5-0.5B via Ollama** |
+| Embeddings | MiniLM-L6 |
+| Vector DB | ChromaDB |
+| RAG | custom Python | 
+| Structured storage | PostgreSQL |
+| Deployment | Docker | 
 
 ## Run with Docker (easiest, everything included)
 Install Docker Desktop and make sure it is running. Then, in the project folder (where `docker-compose.yml` is):
